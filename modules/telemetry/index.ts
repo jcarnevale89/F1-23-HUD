@@ -1,7 +1,7 @@
-import { createSocket } from "dgram";
-import { defineNuxtModule } from "nuxt/kit";
-import WebSocket,{ WebSocketServer } from "ws";
-import { PacketCarTelemetryParser } from "./parsers";
+import { createSocket } from 'dgram'
+import { defineNuxtModule } from 'nuxt/kit'
+import WebSocket, { WebSocketServer } from 'ws'
+import { PacketCarTelemetryParser } from './parsers'
 
 enum PacketSize {
   Motion = 1349,
@@ -20,44 +20,43 @@ enum PacketSize {
   MotionEx = 217,
 }
 
-
 export default defineNuxtModule({
   meta: {
-    name: "udpHandler",
+    name: 'udpHandler',
   },
   setup() {
     const state = { gear: -1, engineRpm: 0, counter: 0 }
 
+    const udpServer = createSocket('udp4')
 
-    const udpServer = createSocket("udp4");
+    udpServer.on('error', (err) => {
+      console.error(`server error:\n${err.stack}`)
+      udpServer.close()
+    })
 
-    udpServer.on("error", (err) => {
-      console.error(`server error:\n${err.stack}`);
-      udpServer.close();
-    });
+    udpServer.on('listening', () => {
+      const address = udpServer.address()
+      console.log(`server listening ${address.address}:${address.port}`)
+    })
 
-    udpServer.on("listening", () => {
-      const address = udpServer.address();
-      console.log(`server listening ${address.address}:${address.port}`);
-    });
-
-    udpServer.on("message", (msg, rinfo) => {
+    udpServer.on('message', (msg, rinfo) => {
       switch (rinfo.size) {
         case PacketSize.CarTelemetry:
-          const { data } = new PacketCarTelemetryParser(msg);
-          console.log(data);
-          break;
+          // eslint-disable-next-line no-case-declarations
+          const { data } = new PacketCarTelemetryParser(msg)
+          console.log(data)
+          break
       }
-    });
+    })
 
-    udpServer.bind(20777);
+    udpServer.bind(20777)
 
     // sim udp
     setInterval(() => {
-      state.engineRpm +=10
+      state.engineRpm += 10
     }, 1000)
 
-    const wss = new WebSocketServer({ port: 8081 });
+    const wss = new WebSocketServer({ port: 8081 })
 
     setInterval(() => {
       wss.clients.forEach((client) => {
@@ -67,4 +66,4 @@ export default defineNuxtModule({
       })
     }, 100)
   },
-});
+})

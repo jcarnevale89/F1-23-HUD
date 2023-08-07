@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-const { state } = useTelemetry();
+const { state } = useTelemetry()
 </script>
 
 <style>
