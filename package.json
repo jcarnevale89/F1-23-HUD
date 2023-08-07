@@ -1,0 +1,23 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@types/node": "^18.17.1",
+    "@types/ws": "^8.5.5",
+    "eslint": "^8.46.0",
+    "nuxt": "^3.6.5",
+    "prettier": "^3.0.1"
+  },
+  "dependencies": {
+    "binary-parser": "^2.2.1",
+    "ws": "^8.13.0"
+  }
+}
