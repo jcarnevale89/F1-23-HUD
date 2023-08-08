@@ -20,12 +20,17 @@ enum PacketSize {
   MotionEx = 217,
 }
 
+// TODO: Add an abstraction for the UDP Server and the Websocket Server
+
 export default defineNuxtModule({
   meta: {
     name: 'udpHandler',
   },
   setup() {
-    const state = { gear: -1, engineRpm: 0, counter: 0 }
+    // keep frame count so we can determin message health
+    let frameCount = 0
+
+    let state: any = { gear: 0, engineRpm: 0, counter: 0 }
 
     const udpServer = createSocket('udp4')
 
@@ -44,17 +49,28 @@ export default defineNuxtModule({
         case PacketSize.CarTelemetry:
           // eslint-disable-next-line no-case-declarations
           const { data } = new PacketCarTelemetryParser(msg)
-          console.log(data)
+          // console.log(data.m_carTelemetryData.forEach)
+          // console.log('new', data.m_header.m_overallFrameIdentifier)
+          if (data.m_header.m_overallFrameIdentifier < state.m_header?.m_overallFrameIdentifier) {
+            console.log('new', data.m_header.m_overallFrameIdentifier)
+            console.log('old', state.m_header.m_overallFrameIdentifier)
+          } else {
+            state = data
+          }
+          break
+
+        case PacketSize.FinalClassification:
+          // Use this to reset the state of the data
+          console.log('race over')
+          break
+
+        default:
+          console.log('other packet')
           break
       }
     })
 
     udpServer.bind(20777)
-
-    // sim udp
-    setInterval(() => {
-      state.engineRpm += 10
-    }, 1000)
 
     const wss = new WebSocketServer({ port: 8081 })
 
@@ -64,6 +80,6 @@ export default defineNuxtModule({
 
         client.send(JSON.stringify(state))
       })
-    }, 100)
+    }, 1000 / 30)
   },
 })

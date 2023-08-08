@@ -79,5 +79,7 @@ export class PacketCarTelemetryParser extends Packet {
       .int8('m_suggestedGear')
 
     this.data = this.fromBuffer(buffer)
+    // Only get the data from our car
+    this.data.m_carTelemetryData = [this.data.m_carTelemetryData[this.data.m_header.m_playerCarIndex]]
   }
 }

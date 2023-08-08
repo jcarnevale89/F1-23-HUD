@@ -1,7 +1,8 @@
 <template>
   <div>
-    <p>{{ state.gear }}</p>
-    <p>{{ state.engineRpm }}</p>
+    <!-- <p>{{ state.gear }}</p>
+    <p>{{ state.engineRpm }}</p> -->
+    <pre>{{ state }}</pre>
   </div>
 </template>
 
