@@ -1,9 +1,7 @@
-import { Parser } from 'binary-parser'
-import { Packet } from './packet'
-import { PacketHeader, PacketHeaderParser } from './packetHeader'
+import { F1PacketParser, BasePacket } from './packet'
+import useTelemetry from '../../../composables/useTelemetry'
 
-export interface PacketCarTelemetry {
-  m_header: PacketHeader
+interface CarTelemetryPacket extends BasePacket {
   m_buttonStatus: number
   m_carTelemetryData: CarTelemetryData[]
   m_mfdPanelIndex: number
@@ -30,56 +28,58 @@ interface CarTelemetryData {
   m_surfaceType: [number, number, number, number]
 }
 
-export class PacketCarTelemetryParser extends Packet {
-  data: PacketCarTelemetry
-
-  constructor(buffer: Buffer) {
-    super()
-
-    this.nest('m_header', {
-      type: new PacketHeaderParser(),
-    })
-      .array('m_carTelemetryData', {
-        length: 22,
-        type: new Parser()
-          .uint16le('m_speed')
-          .floatle('m_throttle')
-          .floatle('m_steer')
-          .floatle('m_brake')
-          .uint8('m_clutch')
-          .int8('m_gear')
-          .uint16le('m_engineRPM')
-          .uint8('m_drs')
-          .uint8('m_revLightsPercent')
-          .uint16le('m_revLightsBitValue')
-          .array('m_brakesTemperature', {
-            length: 4,
-            type: new Parser().uint16le(''),
-          })
-          .array('m_tyresSurfaceTemperature', {
-            length: 4,
-            type: new Parser().uint8(''),
-          })
-          .array('m_tyresInnerTemperature', {
-            length: 4,
-            type: new Parser().uint8(''),
-          })
-          .uint16le('m_engineTemperature')
-          .array('m_tyresPressure', {
-            length: 4,
-            type: new Parser().floatle(''),
-          })
-          .array('m_surfaceType', {
-            length: 4,
-            type: new Parser().uint8(''),
-          }),
+const parser = new F1PacketParser()
+  .array('m_carTelemetryData', {
+    length: 22,
+    type: new F1PacketParser(false)
+      .uint16le('m_speed')
+      .floatle('m_throttle')
+      .floatle('m_steer')
+      .floatle('m_brake')
+      .uint8('m_clutch')
+      .int8('m_gear')
+      .uint16le('m_engineRPM')
+      .uint8('m_drs')
+      .uint8('m_revLightsPercent')
+      .uint16le('m_revLightsBitValue')
+      .array('m_brakesTemperature', {
+        length: 4,
+        type: 'uint16le',
       })
-      .uint8('m_mfdPanelIndex')
-      .uint8('m_mfdPanelIndexSecondaryPlayer')
-      .int8('m_suggestedGear')
+      .array('m_tyresSurfaceTemperature', {
+        length: 4,
+        type: 'uint8',
+      })
+      .array('m_tyresInnerTemperature', {
+        length: 4,
+        type: 'uint8',
+      })
+      .uint16le('m_engineTemperature')
+      .array('m_tyresPressure', {
+        length: 4,
+        type: 'floatle',
+      })
+      .array('m_surfaceType', {
+        length: 4,
+        type: 'uint8',
+      }),
+  })
+  .uint8('m_mfdPanelIndex')
+  .uint8('m_mfdPanelIndexSecondaryPlayer')
+  .int8('m_suggestedGear')
 
-    this.data = this.fromBuffer(buffer)
-    // Only get the data from our car
-    this.data.m_carTelemetryData = [this.data.m_carTelemetryData[this.data.m_header.m_playerCarIndex]]
-  }
+const { setState } = useTelemetry()
+
+export function carTelemetryPacketHandler(buffer: Buffer) {
+  const { m_header, m_suggestedGear, m_carTelemetryData } = parser.parse(buffer) as CarTelemetryPacket
+
+  const ourCar = m_carTelemetryData[m_header.m_playerCarIndex]
+
+  setState({
+    frameCounter: m_header.m_overallFrameIdentifier,
+    gear: ourCar.m_gear,
+    engineRpm: ourCar.m_engineRPM,
+    speed: ourCar.m_speed,
+    suggestedGear: m_suggestedGear,
+  })
 }

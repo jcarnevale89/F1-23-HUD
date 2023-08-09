@@ -1,7 +1,6 @@
-import { createSocket } from 'dgram'
 import { defineNuxtModule } from 'nuxt/kit'
-import WebSocket, { WebSocketServer } from 'ws'
-import { PacketCarTelemetryParser } from './parsers'
+import { carTelemetryPacketHandler } from './parsers'
+import { UDP, WebSocket } from './utils'
 
 enum PacketSize {
   Motion = 1349,
@@ -20,44 +19,22 @@ enum PacketSize {
   MotionEx = 217,
 }
 
-// TODO: Add an abstraction for the UDP Server and the Websocket Server
-
 export default defineNuxtModule({
   meta: {
     name: 'udpHandler',
   },
   setup() {
-    // keep frame count so we can determin message health
-    let frameCount = 0
+    // Create UDP Server
+    const udpServer = new UDP()
 
-    let state: any = { gear: 0, engineRpm: 0, counter: 0 }
+    // Initialize WebSocket Server
+    new WebSocket()
 
-    const udpServer = createSocket('udp4')
-
-    udpServer.on('error', (err) => {
-      console.error(`server error:\n${err.stack}`)
-      udpServer.close()
-    })
-
-    udpServer.on('listening', () => {
-      const address = udpServer.address()
-      console.log(`server listening ${address.address}:${address.port}`)
-    })
-
-    udpServer.on('message', (msg, rinfo) => {
+    // Add UDP message parser
+    udpServer.onMessage((msg, rinfo) => {
       switch (rinfo.size) {
         case PacketSize.CarTelemetry:
-          // eslint-disable-next-line no-case-declarations
-          const { data } = new PacketCarTelemetryParser(msg)
-          // console.log(data.m_carTelemetryData.forEach)
-          // console.log('new', data.m_header.m_overallFrameIdentifier)
-          if (data.m_header.m_overallFrameIdentifier < state.m_header?.m_overallFrameIdentifier) {
-            console.log('new', data.m_header.m_overallFrameIdentifier)
-            console.log('old', state.m_header.m_overallFrameIdentifier)
-          } else {
-            state = data
-          }
-          break
+          return carTelemetryPacketHandler(msg)
 
         case PacketSize.FinalClassification:
           // Use this to reset the state of the data
@@ -69,17 +46,5 @@ export default defineNuxtModule({
           break
       }
     })
-
-    udpServer.bind(20777)
-
-    const wss = new WebSocketServer({ port: 8081 })
-
-    setInterval(() => {
-      wss.clients.forEach((client) => {
-        if (client.readyState !== WebSocket.OPEN) return
-
-        client.send(JSON.stringify(state))
-      })
-    }, 1000 / 30)
   },
 })
