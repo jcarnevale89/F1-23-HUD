@@ -1,5 +1,4 @@
 import { F1PacketParser, BasePacket } from './packet'
-import useTelemetry from '../../../composables/useTelemetry'
 
 interface CarTelemetryPacket extends BasePacket {
   m_buttonStatus: number
@@ -68,18 +67,6 @@ const parser = new F1PacketParser()
   .uint8('m_mfdPanelIndexSecondaryPlayer')
   .int8('m_suggestedGear')
 
-const { setState } = useTelemetry()
-
-export function carTelemetryPacketHandler(buffer: Buffer) {
-  const { m_header, m_suggestedGear, m_carTelemetryData } = parser.parse(buffer) as CarTelemetryPacket
-
-  const ourCar = m_carTelemetryData[m_header.m_playerCarIndex]
-
-  setState({
-    frameCounter: m_header.m_overallFrameIdentifier,
-    gear: ourCar.m_gear,
-    engineRpm: ourCar.m_engineRPM,
-    speed: ourCar.m_speed,
-    suggestedGear: m_suggestedGear,
-  })
+export function carTelemetryPacketParser(buffer: Buffer) {
+  return parser.parse(buffer) as CarTelemetryPacket
 }

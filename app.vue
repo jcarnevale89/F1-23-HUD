@@ -1,17 +1,4 @@
-<template>
-  <div>
-    <!-- <p>{{ state.gear }}</p>
-    <p>{{ state.engineRpm }}</p> -->
-    <pre>{{ state }}</pre>
-  </div>
+<template lang="pug">
+div
+  HUD
 </template>
-
-<script setup lang="ts">
-const { state } = useTelemetry()
-</script>
-
-<style>
-p {
-  font-size: 4rem;
-}
-</style>
