@@ -1,4 +1,4 @@
-import { type RemoteInfo, Socket, createSocket } from 'dgram'
+import { type RemoteInfo, Socket, createSocket } from 'node:dgram'
 
 export class UDP {
   udpServer: Socket
