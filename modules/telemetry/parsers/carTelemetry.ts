@@ -18,7 +18,23 @@ interface CarTelemetryData {
   m_engineRPM: number
   m_drs: number
   m_revLightsPercent: number
-  m_revLightsBitValue: number
+  m_revLightsBitValue: [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ]
   m_brakesTemperature: [number, number, number, number]
   m_tyresSurfaceTemperature: [number, number, number, number]
   m_tyresInnerTemperature: [number, number, number, number]
@@ -40,7 +56,14 @@ const parser = new F1PacketParser()
       .uint16le('m_engineRPM')
       .uint8('m_drs')
       .uint8('m_revLightsPercent')
-      .uint16le('m_revLightsBitValue')
+      .uint16le('m_revLightsBitValue', {
+        formatter(val) {
+          // Take the value and convert it binary, and pad the value with as many zeros needed to make it a length of 15
+          const binaryVal = val.toString(2).padStart(15, '0')
+          // Split the string into individual chars and reverse it so its easier to use in the FE
+          return binaryVal.split('').reverse()
+        },
+      })
       .array('m_brakesTemperature', {
         length: 4,
         type: 'uint16le',

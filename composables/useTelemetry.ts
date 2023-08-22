@@ -8,6 +8,29 @@ interface Telemetry {
   speed: number
   suggestedGear: number
   engineRpm: number
+  revLights: [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ]
+  brakeTemps: {
+    fl: number
+    fr: number
+    rr: number
+    rl: number
+  }
 }
 
 export default function () {
@@ -32,5 +55,12 @@ function getInitialState(): Telemetry {
     speed: 0,
     suggestedGear: 0,
     engineRpm: 0,
+    revLights: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'],
+    brakeTemps: {
+      fl: 0,
+      fr: 0,
+      rr: 0,
+      rl: 0,
+    },
   }
 }

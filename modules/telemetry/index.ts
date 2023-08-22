@@ -5,7 +5,7 @@ import useTelemetry from '../../composables/useTelemetry'
 
 export default defineNuxtModule({
   meta: {
-    name: 'udpHandler',
+    name: 'F1Telemetry',
   },
   setup() {
     // Create UDP Server
@@ -43,6 +43,13 @@ export default defineNuxtModule({
             engineRpm: ourCar.m_engineRPM,
             speed: ourCar.m_speed,
             suggestedGear: m_suggestedGear,
+            revLights: ourCar.m_revLightsBitValue,
+            brakeTemps: {
+              rl: ourCar.m_brakesTemperature[0],
+              rr: ourCar.m_brakesTemperature[1],
+              fl: ourCar.m_brakesTemperature[2],
+              fr: ourCar.m_brakesTemperature[3],
+            },
           })
           break
         }
@@ -52,9 +59,9 @@ export default defineNuxtModule({
           console.log('race over')
           break
 
-        default:
-          console.log('other packet')
-          break
+        // default:
+        //   console.log('other packet')
+        //   break
       }
     })
   },
